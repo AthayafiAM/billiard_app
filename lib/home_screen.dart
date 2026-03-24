@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'profile_screen.dart';
+import 'club_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -81,18 +83,21 @@ class HomeScreen extends StatelessWidget {
                   
                   // List Kartu Lokasi
                   _buildLocationCard(
+                    context,
                     'Margonda', 
                     'Professional Grade Tables • Depok', 
                     '50.000', '4.8',
                     'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=600',
                   ),
                   _buildLocationCard(
+                    context,
                     'Sudirman', 
                     'VIP Lounge & Bar • Jakarta City', 
                     '85.000', '4.9',
                     'https://images.unsplash.com/photo-1611001716885-c513e9a59021?q=80&w=600',
                   ),
                   _buildLocationCard(
+                    context,
                     'BSD', 
                     'Family Friendly • Tangerang', 
                     '45.000', '4.7',
@@ -120,7 +125,15 @@ class HomeScreen extends StatelessWidget {
               _buildNavItem(Icons.home_filled, 'HOME', true),
               _buildNavItem(Icons.pool, 'CLUBS', false),
               _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
-              _buildNavItem(Icons.person, 'PROFILE', false),
+              GestureDetector(
+              onTap: () {
+              Navigator.push(
+             context,
+             MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  },
+  child: _buildNavItem(Icons.person, 'PROFILE', false),
+),
             ],
           ),
         ),
@@ -129,7 +142,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Widget Pembantu untuk Kartu Lokasi
-  Widget _buildLocationCard(String name, String sub, String price, String rate, String imgUrl) {
+  Widget _buildLocationCard(BuildContext context, String name, String sub, String price, String rate, String imgUrl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(20)),
@@ -178,15 +191,49 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Book Now', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClubDetailScreen(),
+      ),
+    );
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: accentBlue,
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+  ),
+  child: const Text(
+    'Book Now',
+    style: TextStyle(fontWeight: FontWeight.bold),
+  ),
+),
+                      ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClubDetailScreen(),
+      ),
+    );
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: accentBlue,
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+  ),
+  child: const Text(
+    'Book Now',
+    style: TextStyle(fontWeight: FontWeight.bold),
+  ),
+),
                   ],
                 ),
               ],
