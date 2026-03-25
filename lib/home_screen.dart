@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -120,7 +121,16 @@ class HomeScreen extends StatelessWidget {
               _buildNavItem(Icons.home_filled, 'HOME', true),
               _buildNavItem(Icons.pool, 'CLUBS', false),
               _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
-              _buildNavItem(Icons.person, 'PROFILE', false),
+              
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+                child: _buildNavItem(Icons.person, 'PROFILE', false),
+              ),
             ],
           ),
         ),
