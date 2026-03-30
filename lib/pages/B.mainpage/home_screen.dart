@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
-import 'club_detail_screen.dart';
+import '../profilepage/profile_page.dart';
+import '../../club_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 22,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=alex'), // Avatar Alex
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=alex'),
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -87,21 +87,21 @@ class HomeScreen extends StatelessWidget {
                     'Margonda', 
                     'Professional Grade Tables • Depok', 
                     '50.000', '4.8',
-                    'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=600',
+                    'https://upload.wikimedia.org/wikipedia/commons/0/07/Hearst_Castle_Casa_Grande_interior_September_2012_006.jpg',
                   ),
                   _buildLocationCard(
                     context,
                     'Sudirman', 
                     'VIP Lounge & Bar • Jakarta City', 
                     '85.000', '4.9',
-                    'https://images.unsplash.com/photo-1611001716885-c513e9a59021?q=80&w=600',
+                    'https://blacklabelbilliards.com/cdn/shop/articles/savannah-pool-table_df14e3d8-362b-4cb1-bd22-874585f45ceb.jpg?v=1755621754&width=3840',
                   ),
                   _buildLocationCard(
                     context,
                     'BSD', 
                     'Family Friendly • Tangerang', 
                     '45.000', '4.7',
-                    'https://images.unsplash.com/photo-1574672112440-62967f086e3a?q=80&w=600',
+                    'https://s.alicdn.com/@sc04/kf/H2480ebe54994465b8f226dfb2ef73dadf/Bojue-9Ft-Professional-Billiard-Table-with-Aluminum-Frame-and-Automatic-Ball-Return-System.jpg',
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -114,26 +114,26 @@ class HomeScreen extends StatelessWidget {
       // 4. Bottom Navigation Bar - TETAP di bawah (Tidak ikut scroll)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: const BoxDecoration(
-          color: bgColor,
-          border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
-        ),
-        child: SafeArea(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home_filled, 'HOME', true),
-              _buildNavItem(Icons.pool, 'CLUBS', false),
-              _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
-              GestureDetector(
-              onTap: () {
-              Navigator.push(
-             context,
-             MaterialPageRoute(builder: (_) => const ProfileScreen()),
-    );
-  },
-  child: _buildNavItem(Icons.person, 'PROFILE', false),
-),
+          decoration: const BoxDecoration(
+             color: bgColor,
+              border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
+              ),
+              child: SafeArea(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(Icons.home_filled, 'HOME', true),
+                    _buildNavItem(Icons.pool, 'CLUBS', false),
+                    _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
+                    GestureDetector(
+                    onTap: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
+                child: _buildNavItem(Icons.person, 'PROFILE', false),
+              ),
             ],
           ),
         ),
@@ -191,49 +191,27 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ClubDetailScreen(),
-      ),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: accentBlue,
-    foregroundColor: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 24),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-  ),
-  child: const Text(
-    'Book Now',
-    style: TextStyle(fontWeight: FontWeight.bold),
-  ),
-),
-                      ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ClubDetailScreen(),
-      ),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: accentBlue,
-    foregroundColor: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 24),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-  ),
-  child: const Text(
-    'Book Now',
-    style: TextStyle(fontWeight: FontWeight.bold),
-  ),
-),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ClubDetailScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Book Now',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
               ],
