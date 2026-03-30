@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projek_billiard/select_table_screen.dart';
 
 class ClubDetailScreen extends StatelessWidget {
   const ClubDetailScreen({super.key});
@@ -143,6 +144,7 @@ class ClubDetailScreen extends StatelessWidget {
                         const SizedBox(height: 12),
 
                         _tableItem(
+                          context,
                           "Diamond Pro Table #04",
                           "VVIP Section",
                           "\$15.00",
@@ -150,6 +152,7 @@ class ClubDetailScreen extends StatelessWidget {
                         ),
 
                         _tableItem(
+                          context,
                           "Classic Table #09",
                           "Standard Section",
                           "\$10.00",
@@ -220,7 +223,13 @@ class ClubDetailScreen extends StatelessWidget {
   }
 
   // 🔹 TABLE ITEM
-  Widget _tableItem(String title, String sub, String price, String img) {
+  Widget _tableItem(
+  BuildContext context,
+  String title,
+  String sub,
+  String price,
+  String img,
+) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(10),
@@ -248,11 +257,20 @@ class ClubDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(backgroundColor: accentBlue),
-            child: const Text("Select"),
-          )
+ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectTableScreen(),
+      ),
+    );
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: accentBlue,
+  ),
+  child: const Text("Select"),
+),
         ],
       ),
     );
