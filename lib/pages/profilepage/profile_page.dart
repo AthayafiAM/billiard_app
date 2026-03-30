@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:projek_billiard/pages/B.mainpage/home_screen.dart';
+import '../A.login/logout.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  // Skema warna 1:1 dari desain
   static const Color bgColor = Color(0xFF0F1115);
   static const Color cardColor = Color(0xFF16191D);
   static const Color accentBlue = Color(0xFF1D88F5);
@@ -24,39 +25,25 @@ class ProfileScreen extends StatelessWidget {
         ),
         title: const Text('Profile', style: TextStyle(color: textMainColor, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: textMainColor),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Bagian yang bisa di-scroll
           Expanded(
             child: SingleChildScrollView(
+              // Menambahkan physics agar scroll terasa lebih kenyal/smooth
+              physics: const BouncingScrollPhysics(), 
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  // 1. Foto Profil & Nama
                   _buildHeaderSection(),
-                  const SizedBox(height: 32),
-                  
-                  // 2. Row Statistik (Bookings, Hours, Clubs)
+                  const SizedBox(height: 32), 
                   _buildStatsRow(),
                   const SizedBox(height: 40),
-
-                  // 3. Recent Activity Section
                   _buildRecentActivity(),
                   const SizedBox(height: 40),
-
-                  // 4. Account Settings Section
                   _buildAccountSettings(),
                   const SizedBox(height: 32),
-
-                  // 5. Button Sign Out
                   _buildSignOutButton(context),
                   const SizedBox(height: 24),
                 ],
@@ -65,10 +52,12 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      // Bottom Nav Bar tetap di bawah
-      bottomNavigationBar: _buildBottomNav(),
+      // PERBAIKAN BARIS 70: Masukkan 'context' ke dalam fungsi
+      bottomNavigationBar: _buildBottomNav(context),
     );
   }
+
+  // --- WIDGET HELPER ---
 
   Widget _buildHeaderSection() {
     return Column(
@@ -92,15 +81,9 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Alex Chen',
-          style: TextStyle(color: textMainColor, fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+        const Text('Alex Chen', style: TextStyle(color: textMainColor, fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        const Text(
-          'Billiards Enthusiast • Level 12',
-          style: TextStyle(color: textSecondaryColor, fontSize: 14),
-        ),
+        const Text('Billiards Enthusiast • Level 12', style: TextStyle(color: textSecondaryColor, fontSize: 14)),
       ],
     );
   }
@@ -210,41 +193,62 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSignOutButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton(
-        onPressed: () => Navigator.pop(context),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFF2A1619)),
-          backgroundColor: const Color(0xFF1A1112),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.logout, color: logoutRed, size: 20),
-            SizedBox(width: 12),
-            Text('Sign Out', style: TextStyle(color: logoutRed, fontWeight: FontWeight.bold)),
-          ],
-        ),
+ Widget _buildSignOutButton(BuildContext context) {
+  return SizedBox(
+    width: double.infinity,
+    height: 56,
+    child: OutlinedButton(
+      // SEKARANG: Memanggil popup konfirmasi, bukan langsung logout
+      onPressed: () => Logout.showConfirmation(context), 
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Color(0xFF2A1619)),
+        backgroundColor: const Color(0xFF1A1112),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-    );
-  }
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.logout, color: Color(0xFFE53935), size: 20),
+          SizedBox(width: 12),
+          Text(
+            'Sign Out', 
+            style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.bold)
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
-  Widget _buildBottomNav() {
+  // --- BOTTOM NAV SECTION (GABUNGAN) ---
+
+  Widget _buildBottomNav(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(color: bgColor, border: Border(top: BorderSide(color: Colors.white10, width: 0.5))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(Icons.home_filled, 'HOME', false),
-          _navItem(Icons.pool, 'CLUBS', false),
-          _navItem(Icons.calendar_month, 'BOOKINGS', false),
-          _navItem(Icons.person, 'PROFILE', true),
-        ],
+      decoration: const BoxDecoration(
+        color: bgColor,
+        border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
+      ),
+      child: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // Item HOME dengan navigasi balik ke HomeScreen
+            GestureDetector(
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false,
+                );
+              },
+              child: _navItem(Icons.home_filled, 'HOME', false),
+            ),
+            _navItem(Icons.pool, 'CLUBS', false),
+            _navItem(Icons.calendar_month, 'BOOKINGS', false),
+            _navItem(Icons.person, 'PROFILE', true),
+          ],
+        ),
       ),
     );
   }
@@ -253,9 +257,16 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: isActive ? accentBlue : textSecondaryColor),
+        Icon(icon, color: isActive ? accentBlue : textSecondaryColor, size: 26),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: isActive ? accentBlue : textSecondaryColor, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            color: isActive ? accentBlue : textSecondaryColor,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

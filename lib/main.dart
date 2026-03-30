@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'login_screen.dart'; // Pastikan nama file sesuai
+import 'pages/A.login/login_screen.dart';
 
 void main() {
   // Mengatur agar status bar transparan dan navigasi bar sesuai tema gelap
