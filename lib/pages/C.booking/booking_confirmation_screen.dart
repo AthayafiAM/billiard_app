@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'my_bookings_screen.dart';
-import 'booking_model.dart';
+import '../../models/booking_model.dart';
 import 'booking_data.dart';
+import '../B_mainpage/home_screen.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
   final String tableName;
@@ -170,20 +170,23 @@ class BookingConfirmationScreen extends StatelessWidget {
   }
 
   void _goToBookings(BuildContext context) {
+  // 1. 🔥 SIMPAN DATA KE SERVICE
+  BookingService.addBooking(
+    BookingModel(
+      table: tableName,
+      club: "Breaktime Billiards",
+      time: "$time (${duration} hrs)",
+    ),
+  );
 
-    // 🔥 SIMPAN DATA (INI YANG PENTING)
-    BookingService.addBooking(
-      BookingModel(
-        table: tableName,
-        club: "Breaktime Billiards",
-        time: "$time (${duration} hrs)",
-      ),
-    );
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
-      (route) => false,
-    );
-  }
+  // 2. 🔥 NAVIGASI KE HOMESCREEN (Bukan ke MyBookingsScreen langsung)
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      // Kita kirim initialIndex: 1 supaya pas kebuka langsung ke tab Bookings
+      builder: (_) => const HomeScreen(initialIndex: 1), 
+    ),
+    (route) => false, // Hapus semua tumpukan halaman lama
+  );
+}
 }

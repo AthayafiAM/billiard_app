@@ -1,4 +1,4 @@
-import 'booking_model.dart';
+import '../../models/booking_model.dart';
 
 class BookingService {
   static final List<BookingModel> _bookings = [];

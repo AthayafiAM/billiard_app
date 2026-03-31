@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projek_billiard/select_table_screen.dart';
+import 'package:projek_billiard/pages/C.booking/select_table_screen.dart';
 
 class ClubDetailScreen extends StatefulWidget {
   final String name;
