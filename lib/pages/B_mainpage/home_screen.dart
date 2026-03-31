@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../profilepage/profile_page.dart';
 import '../../club_detail_screen.dart';
-
+import '../../my_bookings_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -113,32 +113,42 @@ class HomeScreen extends StatelessWidget {
 
       // 4. Bottom Navigation Bar - TETAP di bawah (Tidak ikut scroll)
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: const BoxDecoration(
-             color: bgColor,
-              border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
-              ),
-              child: SafeArea(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(Icons.home_filled, 'HOME', true),
-                    _buildNavItem(Icons.pool, 'CLUBS', false),
-                    _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
-                    GestureDetector(
-                    onTap: () {
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
-                },
-                child: _buildNavItem(Icons.person, 'PROFILE', false),
-              ),
-            ],
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    decoration: const BoxDecoration(
+      color: bgColor,
+      border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
+    ),
+    child: SafeArea(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          GestureDetector(
+            onTap: () {},
+            child: _buildNavItem(Icons.home_filled, 'HOME', true),
           ),
-        ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+              );
+            },
+            child: _buildNavItem(Icons.calendar_month, 'BOOKINGS', false),
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+            child: _buildNavItem(Icons.person, 'PROFILE', false),
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   // Widget Pembantu untuk Kartu Lokasi
@@ -195,7 +205,13 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ClubDetailScreen(),
+                            builder: (_) => ClubDetailScreen(
+                             name: name,
+                             sub: sub,
+                             price: price,
+                             rate: rate,
+                             image: imgUrl,
+),
                           ),
                         );
                       },

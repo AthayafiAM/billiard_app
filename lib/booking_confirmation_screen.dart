@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'my_bookings_screen.dart';
+import 'booking_model.dart';
+import 'booking_data.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
-  const BookingConfirmationScreen({super.key});
+  final String tableName;
+  final String time;
+  final int duration;
+
+  const BookingConfirmationScreen({
+    super.key,
+    required this.tableName,
+    required this.time,
+    required this.duration,
+  });
 
   static const bg = Color(0xFF0A0C10);
   static const card = Color(0xFF161B22);
@@ -21,7 +33,9 @@ class BookingConfirmationScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      _goToBookings(context);
+                    },
                     icon: const Icon(Icons.close),
                   ),
                   const Expanded(
@@ -38,7 +52,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // 🔹 ICON SUCCESS
+            // ICON
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -52,9 +66,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const Text(
               "You're all set.",
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 6),
@@ -66,7 +78,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 🔹 CARD DETAIL
+            // CARD
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -76,10 +88,8 @@ class BookingConfirmationScreen extends StatelessWidget {
               child: Column(
                 children: [
 
-                  // IMAGE
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(16)),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                     child: Image.network(
                       "https://images.unsplash.com/photo-1544197150-b99a580bb7a8",
                       height: 140,
@@ -105,9 +115,9 @@ class BookingConfirmationScreen extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        const Text(
-                          "Table #08",
-                          style: TextStyle(
+                        Text(
+                          tableName,
+                          style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold),
                         ),
@@ -124,14 +134,13 @@ class BookingConfirmationScreen extends StatelessWidget {
 
                         const SizedBox(height: 10),
 
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.access_time, color: primary),
-                            SizedBox(width: 6),
-                            Text("8:00 PM - 10:00 PM (2 hrs)"),
+                            const Icon(Icons.access_time, color: primary),
+                            const SizedBox(width: 6),
+                            Text("$time (${duration} hrs)"),
                           ],
                         ),
-
                       ],
                     ),
                   )
@@ -141,39 +150,40 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const Spacer(),
 
-            // 🔹 BUTTON
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primary,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    icon: const Icon(Icons.qr_code),
-                    label: const Text("Show Entry Code"),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade800,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    icon: const Icon(Icons.calendar_today),
-                    label: const Text("Add to Calendar"),
-                  ),
-                ],
+              child: ElevatedButton(
+                onPressed: () {
+                  _goToBookings(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade800,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text("Oke"),
               ),
             )
           ],
         ),
       ),
+    );
+  }
+
+  void _goToBookings(BuildContext context) {
+
+    // 🔥 SIMPAN DATA (INI YANG PENTING)
+    BookingService.addBooking(
+      BookingModel(
+        table: tableName,
+        club: "Breaktime Billiards",
+        time: "$time (${duration} hrs)",
+      ),
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+      (route) => false,
     );
   }
 }
