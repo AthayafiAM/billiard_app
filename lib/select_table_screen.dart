@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'booking_confirmation_screen.dart';
 import 'select_time_screen.dart';
 
 class SelectTableScreen extends StatelessWidget {
-  const SelectTableScreen({super.key});
+  final String type;
+
+  const SelectTableScreen({super.key, required this.type});
 
   static const bg = Color(0xFF0A0C10);
   static const card = Color(0xFF161B22);
@@ -11,6 +12,8 @@ class SelectTableScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int totalTables = type == "pro" ? 4 : 8;
+
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
@@ -47,71 +50,43 @@ class SelectTableScreen extends StatelessWidget {
             ),
 
             // 🔹 TITLE
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Select a Table",
+                  const Text("Select a Table",
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text("12 tables available",
-                      style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 🔹 FILTER
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _filter("All Tables", true),
-                  _filter("Non-Smoking", false),
-                  _filter("Smoking", false),
-                  _filter("VIP", false),
+                  const SizedBox(height: 4),
+                  Text("$totalTables tables available",
+                      style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // 🔹 LIST
+            // 🔥 LIST
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _tableCard(
+                itemCount: totalTables,
+                itemBuilder: (context, index) {
+                  bool available = index % 2 == 0;
+
+                  String title =
+                      "${type == "pro" ? "Pro" : "Classic"} Table #${index + 1}";
+
+                  return _tableCard(
                     context,
-                    title: "Executive Slate 9ft",
-                    price: "\$15.00",
+                    title: title,
+                    price: type == "pro" ? "\$15.00" : "\$10.00",
                     img:
-                        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8",
-                    available: true,
-                  ),
-                  _tableCard(
-                    context,
-                    title: "Classic Wood 8ft",
-                    price: "\$12.00",
-                    img:
-                        "https://images.unsplash.com/photo-1603575448878-868a20723f46",
-                    available: false,
-                  ),
-                  _tableCard(
-                    context,
-                    title: "The Imperial Chamber",
-                    price: "\$45.00",
-                    img:
-                        "https://images.unsplash.com/photo-1618220179428-22790b461013",
-                    available: true,
-                    vip: true,
-                  ),
-                ],
+                        "https://images.unsplash.com/photo-1572451479139-6a308211d8be",
+                    available: available,
+                  );
+                },
               ),
             ),
           ],
@@ -120,28 +95,12 @@ class SelectTableScreen extends StatelessWidget {
     );
   }
 
-  // 🔹 FILTER BUTTON
-  Widget _filter(String text, bool active) {
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: active ? primary : Colors.grey.shade800,
-        ),
-        child: Text(text),
-      ),
-    );
-  }
-
-  // 🔹 TABLE CARD
   Widget _tableCard(
     BuildContext context, {
     required String title,
     required String price,
     required String img,
     required bool available,
-    bool vip = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -205,16 +164,18 @@ class SelectTableScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 ElevatedButton(
-                   onPressed: available
-    ? () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SelectTimeScreen(),
-          ),
-        );
-      }
-    : null,
+                  onPressed: available
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SelectTimeScreen(
+                                tableName: title, // 🔥 INI KUNCI
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     minimumSize: const Size(double.infinity, 45),
