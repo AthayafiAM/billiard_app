@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/booking_model.dart';
 import 'booking_data.dart';
-import '../B_mainpage/home_screen.dart';
+import 'package:projek_billiard/main.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
   final String tableName;
@@ -169,24 +169,26 @@ class BookingConfirmationScreen extends StatelessWidget {
     );
   }
 
-  void _goToBookings(BuildContext context) {
-  // 1. 🔥 SIMPAN DATA KE SERVICE
-  BookingService.addBooking(
-    BookingModel(
-      table: tableName,
-      club: "Breaktime Billiards",
-      time: "$time (${duration} hrs)",
-    ),
-  );
+ void _goToBookings(BuildContext context) {
+    // 1. SIMPAN DATA KE SERVICE
+    BookingService.addBooking(
+      BookingModel(
+        table: tableName,
+        club: "Breaktime Billiards",
+        time: "$time (${duration} hrs)",
+      ),
+    );
 
-  // 2. 🔥 NAVIGASI KE HOMESCREEN (Bukan ke MyBookingsScreen langsung)
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(
-      // Kita kirim initialIndex: 1 supaya pas kebuka langsung ke tab Bookings
-      builder: (_) => const HomeScreen(initialIndex: 1), 
-    ),
-    (route) => false, // Hapus semua tumpukan halaman lama
-  );
-}
+    // 2. NAVIGASI KE MAIN NAVIGATION (File main.dart)
+    // Kita arahkan ke MainNavigation karena dia yang punya kontrol Tab
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        // Pastikan MainNavigation sudah di-import dari main.dart
+        // Jika MainNavigation tidak menerima initialIndex, gunakan const MainNavigation()
+        builder: (_) => const MainNavigation(initialIndex: 1),
+      ),
+      (route) => false, 
+    );
+  }
 }

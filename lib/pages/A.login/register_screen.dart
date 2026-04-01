@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+// Sesuaikan import ini dengan lokasi ApiService kamu
+// import '../services/api_service.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,6 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _passwordVisible = false;
+  bool _isLoading = false; // Untuk indikator loading
 
   @override
   void dispose() {
@@ -22,7 +28,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // Konsistensi Warna dari Login Page
+  // --- LOGIKA REGISTER ---
+  Future<void> _handleRegister() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showSnackBar("Semua data harus diisi!", Colors.orange);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Ganti URL ini dengan URL laptop/server kamu (10.0.2.2 untuk emulator Android)
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/api/register'),
+        body: {
+          'name': name,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (data['status'] == 'success') {
+        _showSnackBar("Akun berhasil dibuat! Silakan login.", Colors.green);
+        if (mounted) Navigator.pop(context); // Kembali ke Login
+      } else {
+        _showSnackBar(data['message'] ?? "Gagal mendaftar", Colors.red);
+      }
+    } catch (e) {
+      _showSnackBar("Koneksi gagal: $e", Colors.red);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
+  }
+
+  // --- KONSTANTA WARNA ---
   static const Color bgColor = Color(0xFF0F1115);
   static const Color cardColor = Color(0xFF16191D);
   static const Color accentBlue = Color(0xFF1D88F5);
@@ -35,7 +86,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      // Menggunakan Painter yang sama agar identik
       body: CustomPaint(
         painter: DotMatrixPainter(),
         child: SafeArea(
@@ -46,7 +96,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                   child: Column(
                     children: [
-                      // Tombol Back Sederhana
                       Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
@@ -55,8 +104,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
-                      // Judul
                       const Text(
                         'Create Account',
                         style: TextStyle(
@@ -73,7 +120,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Kartu Form Register
                       Container(
                         padding: const EdgeInsets.all(24.0),
                         decoration: BoxDecoration(
@@ -90,7 +136,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Field Nama Lengkap
                             const Text('Full Name', style: TextStyle(color: textSecondaryColor, fontSize: 14)),
                             const SizedBox(height: 8),
                             _buildTextField(
@@ -100,17 +145,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 20),
 
-                            // Field Email
                             const Text('Email Address', style: TextStyle(color: textSecondaryColor, fontSize: 14)),
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _emailController,
                               hint: 'your@email.com',
                               icon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
                             ),
                             const SizedBox(height: 20),
 
-                            // Field Password
                             const Text('Password', style: TextStyle(color: textSecondaryColor, fontSize: 14)),
                             const SizedBox(height: 8),
                             _buildTextField(
@@ -122,15 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             
                             const SizedBox(height: 32),
 
-                            // Tombol Sign Up
                             SizedBox(
                               width: double.infinity,
                               height: 56,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  // Logika pendaftaran bisa ditaruh di sini
-                                  Navigator.pop(context); // Sementara balik ke Login
-                                },
+                                onPressed: _isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: accentBlue,
                                   foregroundColor: Colors.white,
@@ -138,7 +178,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   elevation: 8,
                                   shadowColor: accentBlue.withOpacity(0.4),
                                 ),
-                                child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                child: _isLoading 
+                                  ? const SizedBox(
+                                      height: 24, 
+                                      width: 24, 
+                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                    )
+                                  : const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ],
@@ -146,7 +192,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Balik ke Login
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -168,12 +213,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool isPassword = false}) {
+  Widget _buildTextField({
+    required TextEditingController controller, 
+    required String hint, 
+    required IconData icon, 
+    bool isPassword = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Container(
       decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(8)),
       child: TextField(
         controller: controller,
         obscureText: isPassword ? !_passwordVisible : false,
+        keyboardType: keyboardType,
         style: const TextStyle(color: textMainColor),
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: hintTextColor, size: 20),
@@ -193,7 +245,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-// Painter yang sama agar background konsisten
 class DotMatrixPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

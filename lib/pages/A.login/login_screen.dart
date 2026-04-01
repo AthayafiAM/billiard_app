@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../B_mainpage/home_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import '../../main.dart'; // Pastikan path ini benar menuju file main.dart yang berisi ApiService
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _rememberMe = false;
   bool _passwordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,7 +25,58 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Warna-warna utama sesuai screenshot
+  // FUNGSI LOGIN YANG SUDAH DIPERBAIKI
+  void _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your credentials')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Memanggil ApiService dan menerima response Map/JSON
+      final response = await ApiService.login(email, password);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        // Cek apakah status dari Backend CI4 adalah 'success'
+        if (response['status'] == 'success') {
+          // Navigasi ke halaman utama jika berhasil
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainNavigation()),
+          );
+        } else {
+          // Tampilkan pesan error spesifik dari backend (misal: Password Salah)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Login Failed'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Connection Error: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  // Warna-warna utama (Tema Dark)
   static const Color bgColor = Color(0xFF0F1115);
   static const Color cardColor = Color(0xFF16191D);
   static const Color accentBlue = Color(0xFF1D88F5);
@@ -42,14 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Bagian yang bisa di-scroll (Konten Utama)
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // 1. Gambar & Logo
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -93,8 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       const SizedBox(height: 32),
-
-                      // 2. Judul & Subjudul
                       const Text(
                         'Breaktime Billiards',
                         style: TextStyle(
@@ -110,8 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: textSecondaryColor, fontSize: 16),
                       ),
                       const SizedBox(height: 32),
-
-                      // 3. Kartu Form Login
                       Container(
                         padding: const EdgeInsets.all(24.0),
                         decoration: BoxDecoration(
@@ -152,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: const Text(
                                     'Forgot?',
                                     style: TextStyle(
-                                      color: accentBlue, 
+                                      color: accentBlue,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -188,19 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: double.infinity,
                               height: 56,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  // Validasi sederhana: email dan password tidak boleh kosong
-                                  if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter your email and password')),
-                                    );
-                                  }
-                                },
+                                onPressed: _isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: accentBlue,
                                   foregroundColor: Colors.white,
@@ -208,25 +242,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                   elevation: 8,
                                   shadowColor: accentBlue.withOpacity(0.4),
                                 ),
-                                child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                      )
+                                    : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 48),
-
-                      // 4. Create Account Link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text('Don\'t have an account? ', style: TextStyle(color: textSecondaryColor)),
                           GestureDetector(
                             onTap: () {
-                              // Navigasi ke halaman Create Account
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const RegisterScreen()), // Ganti ke class pendaftaranmu
+                                MaterialPageRoute(builder: (context) => const RegisterScreen()),
                               );
                             },
                             child: const Text('Create an account', style: TextStyle(color: accentBlue, fontWeight: FontWeight.w600)),
@@ -237,8 +274,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
-              // 5. Footer (Privacy & Terms) - Selalu di bawah layar
               Padding(
                 padding: const EdgeInsets.only(bottom: 24.0, top: 8.0),
                 child: Row(
@@ -259,7 +294,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Widget pembantu untuk TextField agar kode lebih bersih
   Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool isPassword = false}) {
     return Container(
       decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(8)),
@@ -269,11 +303,11 @@ class _LoginScreenState extends State<LoginScreen> {
         style: const TextStyle(color: textMainColor),
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: hintTextColor, size: 20),
-          suffixIcon: isPassword 
+          suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: hintTextColor, size: 20),
                   onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                ) 
+                )
               : null,
           hintText: hint,
           hintStyle: const TextStyle(color: hintTextColor),
@@ -285,15 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _footerText(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xFF53565A),
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.2,
-      ),
-    );
+    return Text(text, style: const TextStyle(color: Color(0xFF53565A), fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.2));
   }
 }
 
@@ -307,6 +333,7 @@ class DotMatrixPainter extends CustomPainter {
       }
     }
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
