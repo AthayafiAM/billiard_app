@@ -1,19 +1,67 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'select_time_screen.dart';
 
-class SelectTableScreen extends StatelessWidget {
+class SelectTableScreen extends StatefulWidget {
+  final int clubId;
   final String type;
+  final int price;
+  final String clubName;
 
-  const SelectTableScreen({super.key, required this.type});
+  const SelectTableScreen({
+    super.key,
+    required this.clubId,
+    required this.type,
+    required this.price,
+    required this.clubName,
+  });
 
+  @override
+  State<SelectTableScreen> createState() => _SelectTableScreenState();
+}
+
+class _SelectTableScreenState extends State<SelectTableScreen> {
   static const bg = Color(0xFF0A0C10);
   static const card = Color(0xFF161B22);
   static const primary = Color(0xFF207FDF);
 
+  final String baseUrl = "http://localhost:8080/api/tables";
+
+  List tables = [];
+  bool isLoading = true;
+
+  // 🔥 GET TABLES
+  Future<void> getTables() async {
+    try {
+      final res = await http.get(Uri.parse("$baseUrl?type=${widget.type}"));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+
+        setState(() {
+          tables = data["data"];
+          isLoading = false;
+        });
+      } else {
+        throw Exception("Failed load tables");
+      }
+    } catch (e) {
+      print("ERROR TABLE: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getTables();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final int totalTables = type == "pro" ? 4 : 8;
-
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
@@ -28,22 +76,18 @@ class SelectTableScreen extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       children: [
-                        Text("Breaktime Billiards",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text("PREMIUM CLUB",
+                        Text(widget.clubName, // 🔥 DINAMIS
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const Text("PREMIUM CLUB",
                             style: TextStyle(
                                 fontSize: 10,
                                 color: primary,
                                 letterSpacing: 1)),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.search),
                   ),
                 ],
               ),
@@ -59,7 +103,7 @@ class SelectTableScreen extends StatelessWidget {
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text("$totalTables tables available",
+                  Text("${tables.length} tables available",
                       style: const TextStyle(color: Colors.grey)),
                 ],
               ),
@@ -69,25 +113,20 @@ class SelectTableScreen extends StatelessWidget {
 
             // 🔥 LIST
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: totalTables,
-                itemBuilder: (context, index) {
-                  bool available = index % 2 == 0;
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: tables.length,
+                      itemBuilder: (context, index) {
+                        final table = tables[index];
 
-                  String title =
-                      "${type == "pro" ? "Pro" : "Classic"} Table #${index + 1}";
-
-                  return _tableCard(
-                    context,
-                    title: title,
-                    price: type == "pro" ? "\$15.00" : "\$10.00",
-                    img:
-                        "https://images.unsplash.com/photo-1572451479139-6a308211d8be",
-                    available: available,
-                  );
-                },
-              ),
+                        return _tableCard(
+                          context,
+                          table: table,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -95,13 +134,16 @@ class SelectTableScreen extends StatelessWidget {
     );
   }
 
+  // 🔥 CARD
   Widget _tableCard(
     BuildContext context, {
-    required String title,
-    required String price,
-    required String img,
-    required bool available,
+    required Map table,
   }) {
+    final title = table["table_name"] ?? "-";
+    final price = table["price"] ?? 0;
+    final img = table["image"] ??
+        "https://images.unsplash.com/photo-1572451479139-6a308211d8be";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -110,40 +152,15 @@ class SelectTableScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  img,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: available
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    available ? "AVAILABLE" : "OCCUPIED",
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: available ? Colors.green : Colors.grey,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Image.network(
+              img,
+              height: 160,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
 
           Padding(
@@ -156,7 +173,7 @@ class SelectTableScreen extends StatelessWidget {
                     Text(title,
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text(price,
+                    Text("Rp $price",
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -164,23 +181,23 @@ class SelectTableScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 ElevatedButton(
-                  onPressed: available
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SelectTimeScreen(
-                                tableName: title, // 🔥 INI KUNCI
-                              ),
-                            ),
-                          );
-                        }
-                      : null,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SelectTimeScreen(
+                          tableName: title,
+                          price: int.parse(price.toString()),
+                          clubName: widget.clubName, // 🔥 FIX DISINI
+                        ),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     minimumSize: const Size(double.infinity, 45),
                   ),
-                  child: Text(available ? "SELECT TABLE" : "UNAVAILABLE"),
+                  child: const Text("SELECT TABLE"),
                 )
               ],
             ),

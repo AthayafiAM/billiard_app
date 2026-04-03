@@ -1,10 +1,48 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../C.booking/club_detail_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  // Konstanta Warna (Disamakan dengan tema aplikasi)
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  final String baseUrl = "http://localhost:8080/api/clubs";
+
+  List clubs = [];
+  bool isLoading = true;
+
+  Future<void> getClubs() async {
+    try {
+      final response = await http.get(Uri.parse(baseUrl));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          clubs = data["data"] ?? [];
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("ERROR: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getClubs();
+  }
+
   static const Color bgColor = Color(0xFF0F1115);
   static const Color cardColor = Color(0xFF16191D);
   static const Color accentBlue = Color(0xFF1D88F5);
@@ -18,92 +56,67 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Header (Profil & Notifikasi)
+
+            // HEADER
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Row(
                 children: [
                   const CircleAvatar(
                     radius: 22,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=alex'),
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150'),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      Text('Good evening,', style: TextStyle(color: textSecondaryColor, fontSize: 12)),
-                      Text('Alex', style: TextStyle(color: textMainColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Good evening,',
+                          style: TextStyle(color: textSecondaryColor, fontSize: 12)),
+                      Text('User',
+                          style: TextStyle(
+                              color: textMainColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
                     ],
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: cardColor, shape: BoxShape.circle),
-                    child: const Icon(Icons.notifications, color: textMainColor, size: 20),
                   ),
                 ],
               ),
             ),
 
-            // 2. Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 50,
-                decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12)),
-                child: Row(
-                  children: const [
-                    Icon(Icons.search, color: textSecondaryColor),
-                    const SizedBox(width: 12),
-                    Text('Find your favorite club...', style: TextStyle(color: textSecondaryColor)),
-                    Spacer(),
-                    Icon(Icons.tune, color: textSecondaryColor),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 10),
 
-            const SizedBox(height: 24),
-
-            // 3. Konten List Lokasi (Scrollable)
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Featured Locations', style: TextStyle(color: textMainColor, fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text('View All', style: TextStyle(color: accentBlue, fontSize: 14)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  _buildLocationCard(
-                    context,
-                    'Margonda', 
-                    'Professional Grade Tables • Depok', 
-                    '50.000', '4.8',
-                    'https://upload.wikimedia.org/wikipedia/commons/0/07/Hearst_Castle_Casa_Grande_interior_September_2012_006.jpg',
-                  ),
-                  _buildLocationCard(
-                    context,
-                    'Sudirman', 
-                    'VIP Lounge & Bar • Jakarta City', 
-                    '85.000', '4.9',
-                    'https://blacklabelbilliards.com/cdn/shop/articles/savannah-pool-table_df14e3d8-362b-4cb1-bd22-874585f45ceb.jpg?v=1755621754&width=3840',
-                  ),
-                  _buildLocationCard(
-                    context,
-                    'BSD', 
-                    'Family Friendly • Tangerang', 
-                    '45.000', '4.7',
-                    'https://s.alicdn.com/@sc04/kf/H2480ebe54994465b8f226dfb2ef73dadf/Bojue-9Ft-Professional-Billiard-Table-with-Aluminum-Frame-and-Automatic-Ball-Return-System.jpg',
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : clubs.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "No clubs found 😢",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          children: [
+
+                            const Text(
+                              'Featured Locations',
+                              style: TextStyle(
+                                color: textMainColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            ...clubs.map((club) {
+                              return _buildLocationCard(context, club);
+                            }).toList(),
+
+                            const SizedBox(height: 24),
+                          ],
+                        ),
             ),
           ],
         ),
@@ -111,85 +124,133 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Widget Pembantu untuk Kartu Lokasi
-  Widget _buildLocationCard(BuildContext context, String name, String sub, String price, String rate, String imgUrl) {
+  // 🔥 CARD FIX TOTAL
+  Widget _buildLocationCard(BuildContext context, dynamic club) {
+
+    final name = club["name"] ?? "-";
+    final location = club["location"] ?? "-";
+    final rating = club["rating"]?.toString() ?? "4.5";
+    final image = club["image"] ??
+        "https://images.unsplash.com/photo-1572451479139-6a308211d8be";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         children: [
+
+          // IMAGE
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Image.network(imgUrl, height: 180, width: double.infinity, fit: BoxFit.cover),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                child: Image.network(
+                  image,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
+
               Positioned(
-                top: 12, right: 12,
+                top: 12,
+                right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(12)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.orange, size: 14),
+                      const Icon(Icons.star,
+                          color: Colors.orange, size: 14),
                       const SizedBox(width: 4),
-                      Text(rate, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(rating,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
               ),
             ],
           ),
+
+          // DETAIL
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Breaktime Billiards — $name', style: const TextStyle(color: textMainColor, fontSize: 16, fontWeight: FontWeight.bold)),
+
+                Text(
+                  'Breaktime Billiards — $name',
+                  style: const TextStyle(
+                    color: textMainColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
                 const SizedBox(height: 4),
-                Text(sub, style: const TextStyle(color: textSecondaryColor, fontSize: 12)),
+
+                Text(
+                  location,
+                  style: const TextStyle(
+                    color: textSecondaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+
                 const SizedBox(height: 16),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(text: 'Rp $price', style: const TextStyle(color: accentBlue, fontSize: 18, fontWeight: FontWeight.bold)),
-                          const TextSpan(text: ' /hr', style: TextStyle(color: textSecondaryColor, fontSize: 12)),
-                        ],
+
+                    // 🔥 GANTI JADI OPEN
+                    const Text(
+                      "OPEN",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => ClubDetailScreen(
-                              name: name,
-                              sub: sub,
-                              price: price,
-                              rate: rate,
-                              image: imgUrl,
+                              clubId: int.parse(club['id'].toString()),
+                              name: club['name'],
+                              sub: club['description'],
+                              price: "0",
+                              rate: club['rating'].toString(),
+                              image: club['image'],
                             ),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: accentBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
                       ),
-                      child: const Text('Book Now', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
+                      child: const Text("Book Now"),
+                    )
                   ],
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );

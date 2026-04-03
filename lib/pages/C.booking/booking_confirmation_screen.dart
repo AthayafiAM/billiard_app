@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
-import '../../models/booking_model.dart';
-import 'booking_data.dart';
 import 'package:projek_billiard/main.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
   final String tableName;
   final String time;
   final int duration;
+  final int price;
 
   const BookingConfirmationScreen({
     super.key,
     required this.tableName,
     required this.time,
     required this.duration,
+    required this.price,
   });
 
   static const bg = Color(0xFF0A0C10);
   static const card = Color(0xFF161B22);
   static const primary = Color(0xFF207FDF);
+
+  // 🔥 BASE URL
+  final String baseUrl = "http://127.0.0.1:8080/api";
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +55,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // ICON
+            // 🔹 ICON SUCCESS
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -78,7 +81,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // CARD
+            // 🔹 CARD SUMMARY
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -138,7 +141,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                           children: [
                             const Icon(Icons.access_time, color: primary),
                             const SizedBox(width: 6),
-                            Text("$time (${duration} hrs)"),
+                            Text("$time ($duration hrs)"),
                           ],
                         ),
                       ],
@@ -150,6 +153,7 @@ class BookingConfirmationScreen extends StatelessWidget {
 
             const Spacer(),
 
+            // 🔹 BUTTON
             Padding(
               padding: const EdgeInsets.all(16),
               child: ElevatedButton(
@@ -169,26 +173,14 @@ class BookingConfirmationScreen extends StatelessWidget {
     );
   }
 
- void _goToBookings(BuildContext context) {
-    // 1. SIMPAN DATA KE SERVICE
-    BookingService.addBooking(
-      BookingModel(
-        table: tableName,
-        club: "Breaktime Billiards",
-        time: "$time (${duration} hrs)",
-      ),
-    );
-
-    // 2. NAVIGASI KE MAIN NAVIGATION (File main.dart)
-    // Kita arahkan ke MainNavigation karena dia yang punya kontrol Tab
+  // 🔥 NAVIGATE + (OPTIONAL REFRESH)
+  void _goToBookings(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        // Pastikan MainNavigation sudah di-import dari main.dart
-        // Jika MainNavigation tidak menerima initialIndex, gunakan const MainNavigation()
         builder: (_) => const MainNavigation(initialIndex: 1),
       ),
-      (route) => false, 
+      (route) => false,
     );
   }
 }
