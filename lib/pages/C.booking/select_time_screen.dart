@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'booking_confirmation_screen.dart';
 
 class SelectTimeScreen extends StatefulWidget {
-  final String tableName; // 🔥 TAMBAHAN
+final String tableName;
+final int price;
+final String clubName;
 
   const SelectTimeScreen({
     super.key,
     required this.tableName,
+    required this.price,
+    required this.clubName,
   });
 
   @override
@@ -19,23 +24,42 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
   int duration = 1;
 
   final List<String> times = [
-    "15:00",
-    "16:00",
-    "17:00",
-    "18:00",
-    "19:00",
-    "20:00",
-    "21:00",
-    "22:00",
-    "23:00",
+    "15:00","16:00","17:00","18:00",
+    "19:00","20:00","21:00","22:00","23:00",
   ];
+
+  final String baseUrl = "http://localhost:8080/api";
+
+  // 🔥 CREATE BOOKING (FINAL)
+  Future<bool> createBooking(String time, int duration) async {
+    try {
+      final res = await http.post(
+        Uri.parse("$baseUrl/bookings"),
+body: {
+  "table_name": widget.tableName,
+  "club": "widget.clubName",
+  "start_time": time,
+  "date": DateTime.now().toString().split(" ")[0],
+  "duration": duration.toString(),
+},
+      );
+
+      print("BOOKING RESPONSE: ${res.body}");
+
+      return res.statusCode == 200;
+
+    } catch (e) {
+      print("BOOKING ERROR: $e");
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0C10),
       appBar: AppBar(
-        title: const Text("Select Time"),
+        title: Text(widget.tableName),
         backgroundColor: Colors.transparent,
       ),
       body: Column(
@@ -45,7 +69,7 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
 
           const Text(
             "Choose your time",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
 
           const SizedBox(height: 20),
@@ -55,6 +79,7 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
             child: ListView.builder(
               itemCount: times.length,
               itemBuilder: (context, index) {
+
                 final isSelected = selectedIndex == index;
 
                 return GestureDetector(
@@ -85,16 +110,13 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
             ),
           ),
 
-          // 🔥 DURASI
+          // 🔹 DURASI
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Duration (hours)",
-                  style: TextStyle(color: Colors.white),
-                ),
+                const Text("Duration (hours)", style: TextStyle(color: Colors.white)),
                 const SizedBox(height: 10),
                 Row(
                   children: [1,2,3,4].map((d) {
@@ -135,21 +157,43 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
 
           const SizedBox(height: 20),
 
-          // 🔹 BUTTON
+          // 🔥 CONTINUE BUTTON (FIX TOTAL)
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
               onPressed: selectedIndex == -1
                   ? null
-                  : () {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (_) => PaymentSheet(
-                          time: times[selectedIndex],
-                          duration: duration,
-                          tableName: widget.tableName, // 🔥 KIRIM
-                        ),
-                      );
+                  : () async {
+
+                      final selectedTime = times[selectedIndex];
+
+                      // VALIDASI
+                      if (duration == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Pilih durasi dulu")),
+                        );
+                        return;
+                      }
+
+                      final success = await createBooking(selectedTime, duration);
+
+                      if (success) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingConfirmationScreen(
+                              tableName: widget.tableName,
+                              time: selectedTime,
+                              duration: duration,
+                              price: widget.price,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Booking gagal / jam bentrok")),
+                        );
+                      }
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF207FDF),
@@ -157,95 +201,6 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
               ),
               child: const Text("Continue"),
             ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-
-
-
-
-
-// ================= PAYMENT POPUP =================
-
-class PaymentSheet extends StatelessWidget {
-  final String time;
-  final int duration;
-  final String tableName;
-
-  const PaymentSheet({
-    super.key,
-    required this.time,
-    required this.duration,
-    required this.tableName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-
-    int pricePerHour = 15000;
-    int total = pricePerHour * duration;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Color(0xFF161B22),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-
-          const Text(
-            "Payment Method",
-            style: TextStyle(fontSize: 18, color: Colors.white),
-          ),
-
-          const SizedBox(height: 20),
-
-          const ListTile(
-            title: Text("QRIS", style: TextStyle(color: Colors.white)),
-          ),
-          const ListTile(
-            title: Text("E-Wallet", style: TextStyle(color: Colors.white)),
-          ),
-          const ListTile(
-            title: Text("Cash", style: TextStyle(color: Colors.white)),
-          ),
-
-          const SizedBox(height: 20),
-
-          Text(
-            "Total: Rp $total",
-            style: const TextStyle(color: Colors.white),
-          ),
-
-          const SizedBox(height: 20),
-
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BookingConfirmationScreen(
-                    tableName: tableName,
-                    time: time,
-                    duration: duration,
-                  ),
-                ),
-                (route) => false,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF207FDF),
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text("PAY"),
           )
         ],
       ),
