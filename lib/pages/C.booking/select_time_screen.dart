@@ -3,15 +3,21 @@ import 'package:http/http.dart' as http;
 import 'booking_confirmation_screen.dart';
 
 class SelectTimeScreen extends StatefulWidget {
-final String tableName;
-final int price;
-final String clubName;
+  final String tableName;
+  final int price;
+  final String userEmail;
+  final String clubName;
+  final int clubId;
+  final String userName;
 
   const SelectTimeScreen({
     super.key,
     required this.tableName,
     required this.price,
     required this.clubName,
+    required this.userEmail,
+    required this.userName,
+    required this.clubId,
   });
 
   @override
@@ -30,18 +36,27 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
 
   final String baseUrl = "http://localhost:8080/api";
 
-  // 🔥 CREATE BOOKING (FINAL)
+  // 🔥 CREATE BOOKING (FINAL + DEBUG)
   Future<bool> createBooking(String time, int duration) async {
     try {
+
+      // 🔥 DEBUG WAJIB (LIHAT INI DI CONSOLE)
+      print("USERNAME KIRIM: ${widget.userName}");
+      print("EMAIL KIRIM: ${widget.userEmail}");
+
       final res = await http.post(
         Uri.parse("$baseUrl/bookings"),
-body: {
-  "table_name": widget.tableName,
-  "club": "widget.clubName",
-  "start_time": time,
-  "date": DateTime.now().toString().split(" ")[0],
-  "duration": duration.toString(),
-},
+        body: {
+          "table_name": widget.tableName,
+          "club_id": widget.clubId.toString(),
+          "club": widget.clubName,
+          "start_time": time,
+          "date": DateTime.now().toString().split(" ")[0],
+          "duration": duration.toString(),
+          "user_name": widget.userName, // ✅ SUDAH BENAR
+          "user_image": "",
+          "user_email": widget.userEmail,
+        },
       );
 
       print("BOOKING RESPONSE: ${res.body}");
@@ -157,7 +172,7 @@ body: {
 
           const SizedBox(height: 20),
 
-          // 🔥 CONTINUE BUTTON (FIX TOTAL)
+          // 🔥 CONTINUE BUTTON
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
@@ -167,7 +182,6 @@ body: {
 
                       final selectedTime = times[selectedIndex];
 
-                      // VALIDASI
                       if (duration == 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Pilih durasi dulu")),
@@ -186,6 +200,8 @@ body: {
                               time: selectedTime,
                               duration: duration,
                               price: widget.price,
+                              userEmail: widget.userEmail,
+                              userName: widget.userName,
                             ),
                           ),
                         );

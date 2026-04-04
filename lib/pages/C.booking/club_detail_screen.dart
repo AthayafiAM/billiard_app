@@ -8,6 +8,8 @@ class ClubDetailScreen extends StatelessWidget {
   final String price;
   final String rate;
   final String image;
+  final String userEmail;
+  final String userName; // ✅ TAMBAHAN
 
   const ClubDetailScreen({
     super.key,
@@ -17,6 +19,8 @@ class ClubDetailScreen extends StatelessWidget {
     required this.price,
     required this.rate,
     required this.image,
+    required this.userEmail,
+    required this.userName, // ✅ TAMBAHAN
   });
 
   static const Color bgColor = Color(0xFF0F1115);
@@ -173,12 +177,12 @@ class ClubDetailScreen extends StatelessWidget {
 
                         // ✅ PRO
                         _classCard(
-  context: context,
-  title: "Pro Class",
-  desc: "Exclusive room • 4 tables",
-  type: "pro",
-  price: 15000,
-),
+                          context: context,
+                          title: "Pro Class",
+                          desc: "Exclusive room • 4 tables",
+                          type: "pro",
+                          price: 15000,
+                        ),
 
                         const SizedBox(height: 12),
 
@@ -258,12 +262,14 @@ Widget _classCard({
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SelectTableScreen(
-  clubId: this.clubId,
-  type: type,
-  price: price,
-  clubName: this.name,
-),
+                  builder: (context) => SelectTableScreen(
+                    clubId: clubId,
+                    type: type,
+                    price: price,
+                    clubName: name,
+                    userEmail: userEmail, // 🔥 isi sementara / atau kirim dari sebelumnya
+                    userName: userName,
+                  ),
                 ),
               );
             },

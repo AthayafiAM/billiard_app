@@ -6,7 +6,14 @@ import 'booking_confirmation_screen.dart';
 import '../B_mainpage/home_screen.dart';
 
 class MyBookingsScreen extends StatefulWidget {
-  const MyBookingsScreen({super.key});
+  final String userEmail;
+  final String userName;
+
+  const MyBookingsScreen({
+    super.key,
+    required this.userEmail,
+    required this.userName,
+  });
 
   @override
   State<MyBookingsScreen> createState() => _MyBookingsScreenState();
@@ -29,10 +36,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     fetchBookings();
   }
 
-  // 🔥 FETCH BOOKINGS
+  // 🔥 FETCH BOOKINGS (FIX PRIVATE USER)
   Future<void> fetchBookings() async {
     try {
-      final res = await http.get(Uri.parse("$baseUrl/bookings"));
+      final res = await http.get(
+        Uri.parse("$baseUrl/bookings?user_email=${widget.userEmail}"), // ✅ FIX
+      );
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -66,7 +75,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           onPressed: () {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              MaterialPageRoute(
+                builder: (_) => HomeScreen(
+                  userEmail: widget.userEmail,
+                  userName: widget.userName,
+                ),
+              ),
               (route) => false,
             );
           },
@@ -76,7 +90,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     );
   }
 
-  // 🔥 CARD FIX TOTAL
+  // 🔥 CARD
   Widget _card(dynamic b) {
     final table = b['table_name']?.toString() ?? "-";
     final club = b['club']?.toString() ?? "-";
@@ -93,7 +107,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               tableName: table,
               time: time,
               duration: int.tryParse(duration) ?? 1,
-              price: 0, // 🔥 sementara
+              price: 0,
+              userEmail: widget.userEmail,
+              userName: widget.userName, // ✅ FIX
             ),
           ),
         );

@@ -4,7 +4,10 @@ import 'package:http/http.dart' as http;
 import '../C.booking/club_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userEmail;
+  final String userName; // ✅ TAMBAHAN
+
+  const HomeScreen({super.key, required this.userEmail, required this.userName});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -16,6 +19,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List clubs = [];
   bool isLoading = true;
+
+  // 🔥 USER DATA
+  String? userName;
+  String? imageUrl;
 
   Future<void> getClubs() async {
     try {
@@ -37,10 +44,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // 🔥 FETCH USER PROFILE
+  Future<void> fetchUser() async {
+    try {
+      final url =
+          'http://localhost:8080/api/profile?email=${widget.userEmail}';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final data = jsonData['data'];
+
+        setState(() {
+          userName = data['name'];
+          imageUrl = data['profile_picture']; // FULL URL dari backend
+        });
+      }
+    } catch (e) {
+      print("USER FETCH ERROR: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     getClubs();
+    fetchUser(); // 🔥 WAJIB
   }
 
   static const Color bgColor = Color(0xFF0F1115);
@@ -57,26 +87,36 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
 
-            // HEADER
+            // 🔥 HEADER (DINAMIS)
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 22,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150'),
+                    backgroundImage:
+                        imageUrl != null ? NetworkImage(imageUrl!) : null,
+                    child: imageUrl == null
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Good evening,',
-                          style: TextStyle(color: textSecondaryColor, fontSize: 12)),
-                      Text('User',
-                          style: TextStyle(
-                              color: textMainColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
+                    children: [
+                      const Text(
+                        'Good evening,',
+                        style: TextStyle(
+                            color: textSecondaryColor, fontSize: 12),
+                      ),
+                      Text(
+                        userName ?? 'Loading...',
+                        style: const TextStyle(
+                          color: textMainColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -124,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🔥 CARD FIX TOTAL
+  // 🔥 CARD
   Widget _buildLocationCard(BuildContext context, dynamic club) {
 
     final name = club["name"] ?? "-";
@@ -215,7 +255,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
 
-                    // 🔥 GANTI JADI OPEN
                     const Text(
                       "OPEN",
                       style: TextStyle(
@@ -237,6 +276,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               price: "0",
                               rate: club['rating'].toString(),
                               image: club['image'],
+                              userEmail: widget.userEmail,
+                              userName: widget.userName, // ✅ TAMBAHAN
                             ),
                           ),
                         );

@@ -6,6 +6,8 @@ class BookingConfirmationScreen extends StatelessWidget {
   final String time;
   final int duration;
   final int price;
+  final String userEmail; // 🔥 TAMBAH
+  final String userName;
 
   const BookingConfirmationScreen({
     super.key,
@@ -13,13 +15,14 @@ class BookingConfirmationScreen extends StatelessWidget {
     required this.time,
     required this.duration,
     required this.price,
+    required this.userEmail, // 🔥 WAJIB
+    required this.userName, // 🔥 WAJIB
   });
 
   static const bg = Color(0xFF0A0C10);
   static const card = Color(0xFF161B22);
   static const primary = Color(0xFF207FDF);
 
-  // 🔥 BASE URL
   final String baseUrl = "http://127.0.0.1:8080/api";
 
   @override
@@ -173,12 +176,16 @@ class BookingConfirmationScreen extends StatelessWidget {
     );
   }
 
-  // 🔥 NAVIGATE + (OPTIONAL REFRESH)
+  // 🔥 FIX NAVIGATION
   void _goToBookings(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => const MainNavigation(initialIndex: 1),
+        builder: (_) => MainNavigation(
+          initialIndex: 1,
+          userName: userName, // 🔥 FIX
+          userEmail: userEmail, // 🔥 KIRIM
+        ),
       ),
       (route) => false,
     );

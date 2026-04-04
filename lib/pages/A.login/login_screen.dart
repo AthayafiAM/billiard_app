@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // FUNGSI LOGIN YANG SUDAH DIPERBAIKI
+  // FUNGSI LOGIN YANG SUDAH DIPERBAIKI (HANYA BAGIAN NAVIGATOR)
   void _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -47,13 +47,19 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
 
         // Cek apakah status dari Backend CI4 adalah 'success'
-        if (response['status'] == 'success') {
-          // Navigasi ke halaman utama jika berhasil
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
-          );
-        } else {
+          if (response['status'] == 'success') {
+            final user = response['user'];
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainNavigation(
+                  userName: user?['name'] ?? '', // ✅ tidak pakai "User"
+                  userEmail: user?['email'] ?? email,
+                ),
+              ),
+            );
+          } else {
           // Tampilkan pesan error spesifik dari backend (misal: Password Salah)
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

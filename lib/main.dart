@@ -11,7 +11,7 @@ import 'pages/D.profilepage/profile_page.dart';
 
 // --- KONFIGURASI WARNA & API ---
 const Color bgColor = Color(0xFF0F1115);
-const String baseUrl = 'http://localhost:8080'; // Gunakan 10.0.2.2 jika pakai Emulator Android
+const String baseUrl = 'http://localhost:8080'; // Pakai 10.0.2.2 untuk Emulator
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,14 +38,11 @@ class ApiService {
         },
       );
 
-      // Kita decode dulu body-nya apapun status codenya
       final Map<String, dynamic> data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return data; // Berhasil: {'status': 'success', 'message': '...'}
+        return data; 
       } else {
-        // Gagal (401, 404, dll): {'status': 'error', 'message': 'Password Salah'}
-        // Kita ambil 'message' langsung dari server CI4 agar spesifik
         return {
           'status': 'error',
           'message': data['message'] ?? 'Server Error: ${response.statusCode}'
@@ -83,8 +80,17 @@ class MyApp extends StatelessWidget {
 
 // --- WIDGET NAVIGASI UTAMA (SETELAH LOGIN) ---
 class MainNavigation extends StatefulWidget {
-  final int initialIndex; // Tambahkan ini
-  const MainNavigation({super.key, this.initialIndex = 0}); // Update constructor
+  final int initialIndex;
+  // 🔥 TAMBAHKAN PARAMETER INI AGAR BISA TERIMA DATA DARI LOGIN
+  final String userName;
+  final String userEmail;
+
+  const MainNavigation({
+    super.key, 
+    this.initialIndex = 0, 
+    required this.userName, 
+    required this.userEmail,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -92,8 +98,6 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   late int _selectedIndex;
-
-  // 1. DEKLARASIKAN variabel _pages di sini
   late final List<Widget> _pages;
 
   @override
@@ -101,79 +105,78 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _selectedIndex = widget.initialIndex;
 
-    // 2. ISI variabel _pages dengan halaman asli kamu
-    // Pastikan file-file ini sudah di-import di bagian paling atas main.dart
     _pages = [
-      const HomeScreen(),         // Index 0
-      const MyBookingsScreen(),   // Index 1
-      const ProfileScreen(),      // Index 2
+      HomeScreen(userEmail: widget.userEmail, userName: widget.userName),         // Index 0
+      MyBookingsScreen(userEmail: widget.userEmail, userName: widget.userName),   // Index 1
+      
+      // 🔥 DATA SEKARANG TERKONEKSI KE PROFILE SCREEN
+      ProfileScreen(
+        userName: widget.userName,   
+        userEmail: widget.userEmail, 
+      ),
     ];
   }
 
-  // ... (fungsi _buildNavItem dan build tetap seperti sebelumnya)
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    // IndexedStack menjaga agar halaman tidak di-reload saat pindah tab
-    body: IndexedStack(
-      index: _selectedIndex,
-      children: _pages,
-    ),
-    bottomNavigationBar: Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        color: Color(0xFF16191D), // Warna card gelap agar seragam
-        border: Border(
-          top: BorderSide(color: Colors.white10, width: 0.5),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          color: Color(0xFF16191D),
+          border: Border(
+            top: BorderSide(color: Colors.white10, width: 0.5),
+          ),
+        ),
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavItem(Icons.home_filled, 'HOME', 0),
+              _buildNavItem(Icons.calendar_month, 'BOOKINGS', 1),
+              _buildNavItem(Icons.person, 'PROFILE', 2),
+            ],
+          ),
         ),
       ),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool isActive = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildNavItem(Icons.home_filled, 'HOME', 0),
-            _buildNavItem(Icons.calendar_month, 'BOOKINGS', 1),
-            _buildNavItem(Icons.person, 'PROFILE', 2),
+            Icon(
+              icon,
+              color: isActive ? const Color(0xFF1D88F5) : Colors.grey,
+              size: 26,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? const Color(0xFF1D88F5) : Colors.grey,
+              ),
+            ),
           ],
         ),
       ),
-    ),
-  );
-}
-
-// Fungsi pembantu untuk membuat item navigasi
-Widget _buildNavItem(IconData icon, String label, int index) {
-  bool isActive = _selectedIndex == index;
-  return GestureDetector(
-    onTap: () {
-      setState(() {
-        _selectedIndex = index;
-      });
-    },
-    behavior: HitTestBehavior.opaque, // Agar area klik lebih luas
-    child: SizedBox(
-      width: 80, // Memberikan ruang yang cukup untuk icon & teks
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? const Color(0xFF1D88F5) : Colors.grey,
-            size: 26,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? const Color(0xFF1D88F5) : Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 }

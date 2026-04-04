@@ -8,6 +8,8 @@ class SelectTableScreen extends StatefulWidget {
   final String type;
   final int price;
   final String clubName;
+  final String userEmail;
+  final String userName; // 🔥 FIX (TAMBAH)
 
   const SelectTableScreen({
     super.key,
@@ -15,6 +17,8 @@ class SelectTableScreen extends StatefulWidget {
     required this.type,
     required this.price,
     required this.clubName,
+    required this.userEmail,
+    required this.userName, // 🔥 FIX (TAMBAH)
   });
 
   @override
@@ -188,7 +192,10 @@ class _SelectTableScreenState extends State<SelectTableScreen> {
                         builder: (context) => SelectTimeScreen(
                           tableName: title,
                           price: int.parse(price.toString()),
-                          clubName: widget.clubName, // 🔥 FIX DISINI
+                          clubName: widget.clubName,
+                          userEmail: widget.userEmail, // 🔥 FIX
+                          clubId: widget.clubId, // 🔥 FIX
+                          userName: widget.userName, // sementara pakai email dulu
                         ),
                       ),
                     );
