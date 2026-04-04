@@ -206,7 +206,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               indicatorColor: Colors.blue,
               tabs: const [
                 Tab(text: "Upcoming"),
-                Tab(text: "Past"),
               ],
             ),
 

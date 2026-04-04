@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -9,14 +10,60 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController(); // ✅ TAMBAHAN
+
+  final String baseUrl = "http://localhost:8080/api";
 
   @override
   void dispose() {
     _emailController.dispose();
+    _newPasswordController.dispose(); // ✅ TAMBAHAN
     super.dispose();
   }
 
-  // Warna-warna utama (Konsisten dengan Login & Register)
+  // 🔥 FUNCTION RESET PASSWORD
+  Future<void> resetPassword() async {
+    final email = _emailController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+
+    if (email.isEmpty || newPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Isi semua field")),
+      );
+      return;
+    }
+
+    try {
+      final res = await http.post(
+        Uri.parse("$baseUrl/reset-password"),
+        body: {
+          "email": email,
+          "new_password": newPassword,
+        },
+      );
+
+      print("RESET RESPONSE: ${res.body}");
+
+      if (res.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password berhasil diubah")),
+        );
+
+        Navigator.pop(context); // balik ke login
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal reset password")),
+        );
+      }
+    } catch (e) {
+      print("ERROR: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Server error")),
+      );
+    }
+  }
+
+  // Warna
   static const Color bgColor = Color(0xFF0F1115);
   static const Color cardColor = Color(0xFF16191D);
   static const Color accentBlue = Color(0xFF1D88F5);
@@ -39,7 +86,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                   child: Column(
                     children: [
-                      // Tombol Back
                       Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
@@ -49,81 +95,70 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       const SizedBox(height: 40),
 
-                      // Icon Kunci/Gembok Besar
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: accentBlue.withOpacity(0.1),
                           shape: BoxShape.circle,
-                          border: Border.all(color: accentBlue.withOpacity(0.2), width: 2),
                         ),
                         child: const Icon(Icons.lock_reset_rounded, color: accentBlue, size: 60),
                       ),
+
                       const SizedBox(height: 32),
 
-                      // Judul & Deskripsi
                       const Text(
-                        'Forgot Password?',
+                        'Reset Password',
                         style: TextStyle(
                           color: textMainColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'No worries, we\'ll send you instructions\nto reset your password.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: textSecondaryColor, fontSize: 16, height: 1.5),
-                      ),
-                      const SizedBox(height: 40),
 
-                      // Kartu Form
+                      const SizedBox(height: 30),
+
                       Container(
                         padding: const EdgeInsets.all(24.0),
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 25,
-                              offset: const Offset(0, 10),
-                            )
-                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Email Address', style: TextStyle(color: textSecondaryColor, fontSize: 14)),
+
+                            // 🔹 EMAIL
+                            const Text('Email', style: TextStyle(color: textSecondaryColor)),
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _emailController,
                               hint: 'your@email.com',
                               icon: Icons.email_outlined,
                             ),
-                            const SizedBox(height: 32),
 
-                            // Tombol Reset
+                            const SizedBox(height: 20),
+
+                            // 🔹 NEW PASSWORD
+                            const Text('New Password', style: TextStyle(color: textSecondaryColor)),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _newPasswordController,
+                              hint: 'Enter new password',
+                              icon: Icons.lock_outline,
+                            ),
+
+                            const SizedBox(height: 30),
+
+                            // 🔥 BUTTON
                             SizedBox(
                               width: double.infinity,
-                              height: 56,
+                              height: 50,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  // Tambahkan logika kirim email di sini
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Reset link sent to your email!')),
-                                  );
-                                },
+                                onPressed: resetPassword, // ✅ FIX
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: accentBlue,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  elevation: 8,
-                                  shadowColor: accentBlue.withOpacity(0.4),
                                 ),
-                                child: const Text('Send Reset Link', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                child: const Text("Reset Password"),
                               ),
                             ),
                           ],
@@ -140,25 +175,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+  }) {
     return Container(
-      decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: inputBgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: TextField(
         controller: controller,
         style: const TextStyle(color: textMainColor),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: hintTextColor, size: 20),
+          prefixIcon: Icon(icon, color: hintTextColor),
           hintText: hint,
           hintStyle: const TextStyle(color: hintTextColor),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 }
 
-// Painter yang sama agar background konsisten
 class DotMatrixPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -169,6 +209,7 @@ class DotMatrixPainter extends CustomPainter {
       }
     }
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
