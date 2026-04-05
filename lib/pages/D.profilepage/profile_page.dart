@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'payment_methods.dart';
 import '../A.login/logout.dart';
 import 'package:projek_billiard/pages/C.booking/booking_data.dart';
 
@@ -56,8 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         setState(() {
           name = data['name'];
-
-          // 🔥 backend sudah kasih full URL
           imageUrl = data['profile_picture'];
         });
       }
@@ -66,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // 🔥 UPDATE PROFILE (WEB VERSION)
+  // 🔥 UPDATE PROFILE
   Future<void> _updateProfileToDb(String newName) async {
     try {
       var uri = Uri.parse('http://localhost:8080/api/update-profile');
@@ -76,7 +74,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       request.fields['email'] = widget.userEmail;
       request.fields['name'] = newName;
 
-      // 🔥 FIX: pakai bytes (WEB)
       if (imageBytes != null && imageName != null) {
         request.files.add(
           http.MultipartFile.fromBytes(
@@ -89,9 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      debugPrint("UPDATE STATUS: ${response.statusCode}");
-      debugPrint("UPDATE BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -124,7 +118,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
-  // 🔥 PICK IMAGE (WEB)
   Future<void> pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
 
@@ -133,12 +126,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       imageName = picked.name;
 
       setState(() {});
-
       await _updateProfileToDb(name);
     }
   }
 
-  // 🔥 EDIT NAME
   void editName() {
     TextEditingController controller = TextEditingController(text: name);
     showDialog(
@@ -259,7 +250,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const SizedBox(height: 10),
 
-          _menuItem(Icons.payment, "Payment Methods"),
+          // ✅ FIX PAYMENT CLICK
+          _menuItem(Icons.payment, "Payment Methods", () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PaymentMethodsScreen(
+                  selectedPayment: "Cash",
+                ),
+              ),
+            );
+
+            if (result != null) {
+              await http.post(
+                Uri.parse("http://localhost:8080/api/payment/save"),
+                body: {
+                  "user_email": widget.userEmail,
+                  "type": result,
+                },
+              );
+
+              print("Saved Payment: $result");
+            }
+          }),
+
           _menuItem(Icons.help_outline, "Support & FAQ"),
 
           const SizedBox(height: 30),
@@ -319,7 +333,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _menuItem(IconData icon, String text) {
+  // 🔥 FIX DISINI
+  Widget _menuItem(IconData icon, String text, [VoidCallback? onTap]) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -327,6 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
+        onTap: onTap, // ✅ FIX
         leading: Icon(icon, color: textMainColor, size: 22),
         title: Text(text,
             style: const TextStyle(color: textMainColor, fontSize: 14)),

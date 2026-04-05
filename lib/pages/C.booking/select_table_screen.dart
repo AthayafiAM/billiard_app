@@ -146,7 +146,7 @@ class _SelectTableScreenState extends State<SelectTableScreen> {
     final title = table["table_name"] ?? "-";
     final price = table["price"] ?? 0;
     final img = table["image"] ??
-        "https://images.unsplash.com/photo-1572451479139-6a308211d8be";
+        "https://static.wixstatic.com/media/64cf40_7a4d90bae2de48bd84eedd9f7edebf7e~mv2.jpg/v1/fill/w_716,h_538,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/64cf40_7a4d90bae2de48bd84eedd9f7edebf7e~mv2.jpg";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

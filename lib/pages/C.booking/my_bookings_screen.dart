@@ -32,15 +32,24 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+
+    // ✅ FIX ERROR TAB
+    _tabController = TabController(length: 1, vsync: this);
+
     fetchBookings();
   }
 
-  // 🔥 FETCH BOOKINGS (FIX PRIVATE USER)
+  @override
+  void dispose() {
+    _tabController.dispose(); // ✅ PENTING
+    super.dispose();
+  }
+
+  // 🔥 FETCH BOOKINGS (PRIVATE USER)
   Future<void> fetchBookings() async {
     try {
       final res = await http.get(
-        Uri.parse("$baseUrl/bookings?user_email=${widget.userEmail}"), // ✅ FIX
+        Uri.parse("$baseUrl/bookings?user_email=${widget.userEmail}"),
       );
 
       if (res.statusCode == 200) {
@@ -97,6 +106,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     final time = b['start_time']?.toString() ?? "-";
     final date = b['date']?.toString() ?? "-";
     final duration = b['duration']?.toString() ?? "-";
+    final payment = b['payment']?.toString() ?? "-"; // ✅ TAMBAH PAYMENT
 
     return GestureDetector(
       onTap: () {
@@ -109,7 +119,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               duration: int.tryParse(duration) ?? 1,
               price: 0,
               userEmail: widget.userEmail,
-              userName: widget.userName, // ✅ FIX
+              userName: widget.userName,
             ),
           ),
         );
@@ -153,6 +163,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
             Text("⏳ $duration jam",
                 style: const TextStyle(color: Colors.orange)),
+
+            const SizedBox(height: 4),
+
+            // ✅ TAMPILKAN PAYMENT
+            Text("💳 $payment",
+                style: const TextStyle(color: Colors.green)),
           ],
         ),
       ),
@@ -199,13 +215,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
             const SizedBox(height: 10),
 
+            // ✅ 1 TAB DOANG
             TabBar(
               controller: _tabController,
               labelColor: Colors.blue,
               unselectedLabelColor: Colors.grey,
               indicatorColor: Colors.blue,
               tabs: const [
-                Tab(text: "Upcoming"),
+                Tab(text: "Bookings"),
               ],
             ),
 
@@ -213,7 +230,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _list(),
                   _list(),
                 ],
               ),

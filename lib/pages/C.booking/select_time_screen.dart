@@ -29,6 +29,17 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
   int selectedIndex = -1;
   int duration = 1;
 
+  // ✅ PAYMENT
+  String selectedPayment = "Cash";
+
+  final List<String> paymentMethods = [
+    "Cash",
+    "Gopay",
+    "OVO",
+    "BNI",
+    "BRI"
+  ];
+
   final List<String> times = [
     "15:00","16:00","17:00","18:00",
     "19:00","20:00","21:00","22:00","23:00",
@@ -36,13 +47,19 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
 
   final String baseUrl = "http://localhost:8080/api";
 
-  // 🔥 CREATE BOOKING (FINAL + DEBUG)
+  // 🔥 CREATE BOOKING
   Future<bool> createBooking(String time, int duration) async {
     try {
 
-      // 🔥 DEBUG WAJIB (LIHAT INI DI CONSOLE)
-      print("USERNAME KIRIM: ${widget.userName}");
-      print("EMAIL KIRIM: ${widget.userEmail}");
+      // 🔥 DEBUG (WAJIB LIHAT INI)
+      print("USERNAME: ${widget.userName}");
+      print("EMAIL: ${widget.userEmail}");
+      print("PAYMENT: $selectedPayment");
+
+      if (widget.userEmail.isEmpty) {
+        print("ERROR: EMAIL KOSONG");
+        return false;
+      }
 
       final res = await http.post(
         Uri.parse("$baseUrl/bookings"),
@@ -53,12 +70,13 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
           "start_time": time,
           "date": DateTime.now().toString().split(" ")[0],
           "duration": duration.toString(),
-          "user_name": widget.userName, // ✅ SUDAH BENAR
-          "user_image": "",
-          "user_email": widget.userEmail,
+          "user_name": widget.userName,
+          "user_email": widget.userEmail, // ✅ FIX PENTING
+          "payment": selectedPayment,     // ✅ FIX
         },
       );
 
+      print("BOOKING STATUS: ${res.statusCode}");
       print("BOOKING RESPONSE: ${res.body}");
 
       return res.statusCode == 200;
@@ -172,6 +190,36 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
 
           const SizedBox(height: 20),
 
+          // 🔥 PAYMENT SELECTOR
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Payment Method", style: TextStyle(color: Colors.white)),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: selectedPayment,
+                  dropdownColor: const Color(0xFF161B22),
+                  style: const TextStyle(color: Colors.white),
+                  items: paymentMethods.map((p) {
+                    return DropdownMenuItem(
+                      value: p,
+                      child: Text(p),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedPayment = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // 🔥 CONTINUE BUTTON
           Padding(
             padding: const EdgeInsets.all(16),
@@ -181,13 +229,6 @@ class _SelectTimeScreenState extends State<SelectTimeScreen> {
                   : () async {
 
                       final selectedTime = times[selectedIndex];
-
-                      if (duration == 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Pilih durasi dulu")),
-                        );
-                        return;
-                      }
 
                       final success = await createBooking(selectedTime, duration);
 
